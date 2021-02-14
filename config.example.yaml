@@ -1,0 +1,11 @@
+debug: False
+
+providers:
+  yandex_music:
+    title: "Яндекс.Музыка"
+    username: <YOUR_YANDEX_LOGIN>
+    password: <YOUR_YANDEX_PASSWORD>
+    cache: ./cache
+
+controllers:
+  cli: true
