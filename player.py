@@ -1,12 +1,7 @@
 from __future__ import annotations
 from datetime import timedelta
-
-from yandex_music.track.track import Track
-from utils import cache_track, cast_to_track
-from time import sleep
+from models.Track import Track
 import vlc
-
-from yandex_music.track_short import TrackShort
 
 
 class PlayerState:
@@ -18,13 +13,34 @@ class PlayerState:
         self.ellapsed_ms: int = 0
         self.remaining_ms: int = 0
         self.vlc_media_options: str | None = vlc_media_options
+        self.source = None
 
-    def serialize(self):
-        d = self.__dict__.copy()
-        d['next_track'] = None if not self.next_track else self.next_track.to_dict()
-        d['track'] = None if not self.track else self.track.to_dict()
-        d['prev_track'] = None if not self.prev_track else self.prev_track.to_dict()
-        return d
+    def set_is_playing(self, val: bool):
+        self.is_playing = val
+
+    def set_next_track(self, val: Track | None):
+        self.next_track = val
+        if self.next_track is not None:
+            self.next_track.fetch()
+
+    def set_track(self, val: Track | None):
+        self.track = val
+        if self.track is not None:
+            self.track.fetch()
+
+    def set_prev_track(self, val: Track | None):
+        self.prev_track = val
+        if self.prev_track is not None:
+            self.prev_track.fetch()
+
+    def set_ellapsed_ms(self, val: int):
+        self.ellapsed_ms = val
+
+    def set_remaining_ms(self, val: int):
+        self.remaining_ms = val
+
+    def set_vlc_media_options(self, val: str):
+        self.vlc_media_options = val
 
     def __repr__(self) -> str:
         message = ""
@@ -33,8 +49,9 @@ class PlayerState:
         timedelta_ellapsed = timedelta(milliseconds=self.ellapsed_ms)
         timedelta_remaining = timedelta(milliseconds=self.remaining_ms)
 
-        message += str(timedelta_ellapsed).split('.')[0] + ' '
-        message += str(timedelta_remaining).split('.')[0] + ' '
+        message += f'{self.track.title} - {self.track.artists.title} '
+        message += str(timedelta_ellapsed).split('.')[0] + ' <-> '
+        message += str(timedelta_remaining).split('.')[0]
         return message
 
 
@@ -54,62 +71,63 @@ class Player:
             vlc.EventType.MediaPlayerTimeChanged, self.__on_player_time_changed)  # type: ignore
 
         self._state = PlayerState(vlc_media_options)
-        self.playlist: list[Track | TrackShort] = []
+        self.playlist: list[Track] = []
         self.now_playing_idx: int = -1
 
     def __replace_media(self):
-        track = cast_to_track(self.playlist[self.now_playing_idx])
+        track = self.playlist[self.now_playing_idx]
 
-        self._state.prev_track = cast_to_track(
-            self.playlist[self.now_playing_idx - 1]) if self.now_playing_idx > 0 else None
-        self._state.track = track
-        self._state.next_track = cast_to_track(
-            self.playlist[self.now_playing_idx + 1]) if self.now_playing_idx < len(self.playlist) - 1 else None
-        self._state.ellapsed_ms = 0
-        self._state.remaining_ms = track.duration_ms or 0
-        self._state.is_playing = True
+        self._state.set_prev_track(
+            self.playlist[self.now_playing_idx - 1] if self.now_playing_idx > 0 else None)
+        self._state.set_track(track)
+        self._state.set_next_track(
+            self.playlist[self.now_playing_idx + 1] if self.now_playing_idx < len(self.playlist) - 1 else None)
+        self._state.set_ellapsed_ms(0)
+        self._state.set_remaining_ms(track.duration_ms or 0)
+        self._state.set_is_playing(True)
 
-        track_path = cache_track(track)
+        track_path = track.cache()
         media = self._vlc.media_new(track_path, self._state.vlc_media_options)
         self._player.set_media(media)
         self._player.play()
 
     def __on_player_time_changed(self, event):
-        self._state.ellapsed_ms = self._player.get_time()
-        self._state.remaining_ms = self._state.track.duration_ms - self._state.ellapsed_ms
+        self._state.set_ellapsed_ms(self._player.get_time())
+        self._state.set_remaining_ms(
+            self._state.track.duration_ms - self._state.ellapsed_ms)
 
     def read_state(self) -> PlayerState:
         return self._state
 
     def set_vlc_media_options(self, vlc_media_options):
-        self._state.vlc_media_options = vlc_media_options
+        self._state.set_vlc_media_options(vlc_media_options)
         if self.now_playing_idx != -1:
             self.__replace_media()
 
-    def append_playlist(self, playlist: list[TrackShort] | list[Track]):
+    def append_playlist(self, playlist: list[Track]):
         self.playlist += playlist
 
-    def set_playlist(self, playlist: list[TrackShort | Track]):
+    def set_playlist(self, playlist: list[Track]):
         self.playlist = playlist
         self.now_playing_idx = -1
 
-    def play(self, track_short: Track | TrackShort | None = None):
-        if track_short is not None:
-            self.playlist = [cast_to_track(track_short)]
+    def play(self, track: Track | None = None):
+        if track is not None:
+            self.playlist = [track]
             self.now_playing_idx = -1
 
         if len(self.playlist) == 0:
             return
 
         if self.now_playing_idx == -1:
-            self._state.is_playing = False
+            self._state.set_is_playing(False)
             self.now_playing_idx = 0
 
         if not self._state.is_playing:
             self.__replace_media()
 
     def pause(self):
-        self._state.is_playing = not self._state.is_playing
+        self._state.set_is_playing(not self._state.is_playing)
         self._player.pause()
 
     def next(self):
@@ -131,5 +149,5 @@ class Player:
     def stop(self):
         self.now_playing_idx = -1
         self._player.stop()
-        self._state.is_playing = False
-        self._state.ellapsed_ms = 0
+        self._state.set_is_playing(False)
+        self._state.set_ellapsed_ms(0)

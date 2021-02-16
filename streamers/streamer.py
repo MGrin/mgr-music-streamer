@@ -1,8 +1,10 @@
 from __future__ import annotations
+from models.Track import Track
 
 import threading
 from queue import Queue
 from typing import Any
+
 from player import Player, PlayerState
 from time import sleep
 
@@ -71,9 +73,10 @@ class Streamer:
     def on_error_player_event_callback(self, event):
         print(event)
 
-    def get_state(self) -> dict[str, Any]:
+    def get_state(self) -> PlayerState | None:
         state = self.send_command_to_player('read_state', await_result=True)
-        return {**(state.serialize()), "source": self.source}  # type: ignore
+        state.source = self.source
+        return state
 
     def play(self):
         if self.__debug:
@@ -96,10 +99,10 @@ class Streamer:
     def set_vlc_media_options(self, vlc_media_options: str):
         self.send_command_to_player('set_vlc_media_options', vlc_media_options)
 
-    def append_playlist(self, playlist):
+    def append_playlist(self, playlist: list[Track]):
         self.send_command_to_player('append_playlist', playlist)
 
-    def set_playlist(self, playlist):
+    def set_playlist(self, playlist: list[Track]):
         self.send_command_to_player('set_playlist', playlist)
 
     def __testable_play(self, number_of_tracks=5):

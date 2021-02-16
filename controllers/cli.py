@@ -44,69 +44,66 @@ def cli_handler(streamers: dict[str, Streamer]):
     while True:
         action_raw = input(f"{controller.active_streamer.title} > ")
         action = action_raw.lower()
-        try:
-            if action == HELP:
-                resp = controller.help()
-                print(resp.message)
-                for cmd in resp.data:
-                    desc = resp.data[cmd]
-                    print(f' - {cmd} - {desc}')
+        if action == HELP:
+            resp = controller.help()
+            print(resp.message)
+            for cmd in resp.data:
+                desc = resp.data[cmd]
+                print(f' - {cmd} - {desc}')
 
-            elif action == LIST_PREDEFINED_PLAYLISTS:
-                resp = controller.list_playlists()
-                print(resp.message)
-                for pl in resp.data:
-                    print(f' - {pl}')
+        elif action == LIST_PREDEFINED_PLAYLISTS:
+            resp = controller.list_playlists()
+            print(resp.message)
+            for pl in resp.data:
+                print(f' - {pl}')
 
-            elif action == LIST_PROVIDERS:
-                resp = controller.list_streamers()
-                print(resp.message)
-                for pl in resp.data:
-                    print(f' - {pl}')
+        elif action == LIST_PROVIDERS:
+            resp = controller.list_streamers()
+            print(resp.message)
+            for pl in resp.data:
+                print(f' - {pl}')
 
-            elif action.startswith(SELECT_PROVIDER_ACTION_PREFIX):
-                provider_title = action[len(SELECT_PROVIDER_ACTION_PREFIX):]
-                resp = controller.select_provider(provider_title)
-                print(resp.message)
+        elif action.startswith(SELECT_PROVIDER_ACTION_PREFIX):
+            provider_title = action[len(SELECT_PROVIDER_ACTION_PREFIX):]
+            resp = controller.select_provider(provider_title)
+            print(resp.message)
 
-            elif action.startswith(PLAYLIST_ACTION_PREFIX):
-                playlist = action[len(PLAYLIST_ACTION_PREFIX):]
-                resp = controller.select_playlist(playlist)
-                print(resp.message)
-                resp = controller.state()
-                print(resp.message)
+        elif action.startswith(PLAYLIST_ACTION_PREFIX):
+            playlist = action[len(PLAYLIST_ACTION_PREFIX):]
+            resp = controller.select_playlist(playlist)
+            print(resp.message)
+            resp = controller.state()
+            print(resp.message)
 
-            elif action.startswith(SEARCH_ACTION_PREFIX):
-                query = action[len(SEARCH_ACTION_PREFIX):]
-                resp = controller.select_search(query)
-                print(resp.message)
-                resp = controller.state()
-                print(resp.message)
+        elif action.startswith(SEARCH_ACTION_PREFIX):
+            query = action[len(SEARCH_ACTION_PREFIX):]
+            resp = controller.select_search(query)
+            print(resp.message)
+            resp = controller.state()
+            print(resp.message)
 
-            elif action == PLAY:
-                resp = controller.play()
-                resp = controller.state()
-                print(resp.message)
-            elif action == PAUSE:
-                resp = controller.pause()
-                resp = controller.state()
-                print(resp.message)
-            elif action == NEXT:
-                resp = controller.next()
-                resp = controller.state()
-                print(resp.message)
-            elif action == PREV:
-                resp = controller.prev()
-                resp = controller.state()
-            elif action == STOP:
-                resp = controller.stop()
-                print(resp.message)
-            elif action == STATE:
-                resp = controller.state()
-                print(resp.message)
-            else:
-                raise Exception(f'Unknown action {action}')
+        elif action == PLAY:
+            resp = controller.play()
+            resp = controller.state()
+            print(resp.message)
+        elif action == PAUSE:
+            resp = controller.pause()
+            resp = controller.state()
+            print(resp.message)
+        elif action == NEXT:
+            resp = controller.next()
+            resp = controller.state()
+            print(resp.message)
+        elif action == PREV:
+            resp = controller.prev()
+            resp = controller.state()
+        elif action == STOP:
+            resp = controller.stop()
+            print(resp.message)
+        elif action == STATE:
+            resp = controller.state()
+            print(resp.message)
+        else:
+            raise Exception(f'Unknown action {action}')
 
-            print()
-        except Exception as e:
-            print(f'Error: {e}')
+        print()

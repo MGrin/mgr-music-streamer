@@ -11,7 +11,7 @@ class Response:
         self.data = data
 
 
-def success_response(data: dict[str, Any] | list[Any] = None, message: str = None):
+def success_response(data: dict[str, Any] | list[Any] | Any = None, message: str = None):
     return Response(message=message, data=data)
 
 
@@ -27,18 +27,10 @@ class Controller:
     def state(self):
         state = self.active_streamer.get_state()
         message = 'Stopped'
-        if state['is_playing']:
-            message = 'Playing: '
-            track = state['track']
-            if track is not None:
-                message += track['title']
-                message += ' - '
-                artists = track['artists']
-                if artists is not None and len(artists) > 0:
-                    artist = artists[0]
-                    message += artist['name']
+        if state.is_playing:
+            message = str(state)
 
-        return success_response(state, message)
+        return success_response(state.__dict__, message)
 
     def list_streamers(self):
         providers = []

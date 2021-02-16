@@ -13,3 +13,9 @@ class Track:
 
         self.duration_ms: int | None = None
         self.cover_uri: str | None = None
+
+    def fetch(self):
+        raise Exception('Cache is not implemented!')
+
+    def cache(self):
+        raise Exception('Cache is not implemented!')
