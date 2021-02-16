@@ -53,16 +53,20 @@ class Streamer:
     def play_predefined_playlist(self, playlist_name: str):
         self.source = {
             'type': 'playlist',
-            'name': 'playlist_name',
+            'name': playlist_name,
         }
-        pass
+
+    def play_playlist(self, playlist_id: str):
+        self.source = {
+            'type': 'playlist',
+            'id': playlist_id,
+        }
 
     def play_from_query(self, query: str):
         self.source = {
             'type': 'query',
             'query': query,
         }
-        pass
 
     def fetch_predefinded_playlists(self) -> list[str]:
         return []

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from cachetools.func import ttl_cache
 from models.SubList import SubList
 from pathlib import Path
 
@@ -78,17 +79,27 @@ class YMStreamer(Streamer):
         CACHE_PATH = cache
 
     def play_predefined_playlist(self, playlist_name: str):
-        ym_playlist = self.__get_playlist(playlist_name)
+        super().play_predefined_playlist(playlist_name)
+        ym_playlist = self.__get_playlist_by_name(playlist_name)
+        playlist: list[Track] = [YMTrack(track) for track in ym_playlist]
+        self.set_playlist(playlist)
+        self.play()
+
+    def play_playlist(self, playlist_id: str):
+        super().play_playlist(playlist_id)
+        ym_playlist = self.__get_playlist_by_id(playlist_id)
         playlist: list[Track] = [YMTrack(track) for track in ym_playlist]
         self.set_playlist(playlist)
         self.play()
 
     def play_from_query(self, query: str):
+        super().play_predefined_playlist(query)
         ym_playlist = self.__generate_playlist_from_query(query)
         playlist: list[Track] = [YMTrack(track) for track in ym_playlist]
         self.set_playlist(playlist)
         self.play()
 
+    @ttl_cache(maxsize=1, ttl=60 * 60)  # type: ignore
     def fetch_predefinded_playlists(self):
         PersonalPlaylistBlocks = self.client.landing(
             blocks=['personalplaylists']).blocks[0]
@@ -99,7 +110,7 @@ class YMStreamer(Streamer):
                 x.data.data.generated_playlist_type)  # type: ignore
         return [*playlists, 'liked']
 
-    def __get_playlist(self, name: str) -> list[yandex_music.Track | yandex_music.TrackShort]:
+    def __get_playlist_by_name(self, name: str) -> list[yandex_music.Track | yandex_music.TrackShort]:
         if name == 'liked':
             tracks = self.client.users_likes_tracks()
             if tracks is None:
@@ -120,6 +131,9 @@ class YMStreamer(Streamer):
             user_id=DailyPlaylist.uid, kind=DailyPlaylist.kind)  # type: ignore
 
         return playlist.tracks  # type: ignore
+
+    def __get_playlist_by_id(self, id: str) -> list[yandex_music.Track | yandex_music.TrackShort]:
+        raise Exception('Not implemented')
 
     def __generate_playlist_from_query(self, query) -> list[yandex_music.Track | yandex_music.TrackShort]:
         search_result = self.client.search(query)

@@ -10,6 +10,7 @@ datetime = "*"
 flask = "*"
 pyyaml = "*"
 jsonpickle = "*"
+cachetools = "*"
 
 [dev-packages]
 autopep8 = "*"
