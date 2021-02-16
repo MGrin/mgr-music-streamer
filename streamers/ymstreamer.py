@@ -8,7 +8,6 @@ from yandex_music import Client
 from models.Track import Track
 from streamers.streamer import Streamer
 
-
 SEARCH_TYPE_TO_NAME = {
     'track': 'трек',
     'artist': 'исполнитель',

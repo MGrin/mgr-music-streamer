@@ -9,3 +9,5 @@ providers:
 
 controllers:
   cli: true
+  http:
+    port: 500

@@ -9,6 +9,7 @@ python-vlc = "*"
 datetime = "*"
 flask = "*"
 pyyaml = "*"
+jsonpickle = "*"
 
 [dev-packages]
 autopep8 = "*"

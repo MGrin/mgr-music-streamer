@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from streamers.streamer import Streamer
 from typing import Any
+import json
 
 
 class Response:
@@ -30,7 +31,7 @@ class Controller:
         if state.is_playing:
             message = str(state)
 
-        return success_response(state.__dict__, message)
+        return success_response(state, message)
 
     def list_streamers(self):
         providers = []

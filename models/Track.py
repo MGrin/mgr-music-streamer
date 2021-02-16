@@ -1,8 +1,9 @@
 from __future__ import annotations
+from typing import Any
 from models.SubList import SubList
 
 
-class Track:
+class Track():
     def __init__(self):
         self.provider: str | None = None
         self.id: str | None = None
