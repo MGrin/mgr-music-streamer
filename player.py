@@ -1,5 +1,4 @@
 from __future__ import annotations
-from collections import namedtuple
 from datetime import timedelta
 
 from yandex_music.track.track import Track
@@ -11,13 +10,14 @@ from yandex_music.track_short import TrackShort
 
 
 class PlayerState:
-    def __init__(self):
+    def __init__(self, vlc_media_options: str | None):
         self.is_playing: bool = False
         self.next_track: Track | None = None
         self.track: Track | None = None
         self.prev_track: Track | None = None
         self.ellapsed_ms: int = 0
         self.remaining_ms: int = 0
+        self.vlc_media_options: str | None = vlc_media_options
 
     def serialize(self):
         d = self.__dict__.copy()
@@ -40,7 +40,6 @@ class PlayerState:
 
 class Player:
     def __init__(self, callbacks: dict = {}, vlc_media_options: str = None):
-        self._vlc_media_options = vlc_media_options
         self._vlc = vlc.Instance()
         self._player = self._vlc.media_player_new()
         self._player_events = self._player.event_manager()
@@ -54,7 +53,7 @@ class Player:
         self._player_events.event_attach(
             vlc.EventType.MediaPlayerTimeChanged, self.__on_player_time_changed)  # type: ignore
 
-        self._state = PlayerState()
+        self._state = PlayerState(vlc_media_options)
         self.playlist: list[Track | TrackShort] = []
         self.now_playing_idx: int = -1
 
@@ -71,7 +70,7 @@ class Player:
         self._state.is_playing = True
 
         track_path = cache_track(track)
-        media = self._vlc.media_new(track_path, self._vlc_media_options)
+        media = self._vlc.media_new(track_path, self._state.vlc_media_options)
         self._player.set_media(media)
         self._player.play()
 
@@ -79,11 +78,11 @@ class Player:
         self._state.ellapsed_ms = self._player.get_time()
         self._state.remaining_ms = self._state.track.duration_ms - self._state.ellapsed_ms
 
-    def read_state(self):
+    def read_state(self) -> PlayerState:
         return self._state
 
     def set_vlc_media_options(self, vlc_media_options):
-        self._vlc_media_options = vlc_media_options
+        self._state.vlc_media_options = vlc_media_options
         if self.now_playing_idx != -1:
             self.__replace_media()
 

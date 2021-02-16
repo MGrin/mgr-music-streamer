@@ -1,7 +1,10 @@
+from controllers.controller import success_response
+from controllers.controller import Controller
 from streamers.streamer import Streamer
 
 HELP = "help"
 LIST_PROVIDERS = "list:providers"
+SELECT_PROVIDER_ACTION_PREFIX = "provider:"
 LIST_PREDEFINED_PLAYLISTS = "list:pl"
 PLAYLIST_ACTION_PREFIX = "pl:"
 SEARCH_ACTION_PREFIX = "q:"
@@ -10,64 +13,97 @@ PAUSE = "pause"
 NEXT = "next"
 PREV = "prev"
 STOP = "stop"
+STATE = "state"
+
+
+class CliController(Controller):
+    def help(self):
+        message = "CLI Music Streamer controller.\nAvailable commands:"
+        data = {
+            HELP: "shows this help'",
+            LIST_PROVIDERS: "shows all available music providers'",
+            SELECT_PROVIDER_ACTION_PREFIX: "< PROVIDER NAME > switch to PROVIDER NAME provider'",
+            LIST_PREDEFINED_PLAYLISTS: "shows list of predefined playlists'",
+            PLAYLIST_ACTION_PREFIX: "< PLAYLIST NAME > plays the provided playlist'",
+            SEARCH_ACTION_PREFIX: "< QUERY > plays the best match of the given query'",
+            STATE: "show what is playing now'",
+            PLAY: "",
+            PAUSE: "",
+            NEXT: "",
+            PREV: "",
+            STOP: "",
+        }
+        return success_response(data=data, message=message)
 
 
 def cli_handler(streamers: dict[str, Streamer]):
-    streamers_names = list(streamers.keys())
-    if len(streamers_names) == 0:
-        raise Exception('No streamers provided')
-
-    streamer = streamers[streamers_names[0]]
+    controller = CliController(streamers)
 
     print('Type help to see available commands')
     print()
     while True:
-        action = input(f"{streamer.title} > ")
+        action_raw = input(f"{controller.active_streamer.title} > ")
+        action = action_raw.lower()
         try:
             if action == HELP:
-                print("CLI Music Streamer controller.")
-                print("Available commands:")
-                print(f' {HELP} - shows this help')
-                print(f' {LIST_PROVIDERS} - shows all available music providers')
-                print(
-                    f' {LIST_PREDEFINED_PLAYLISTS} - shows list of predefined playlists')
-                print(
-                    f' {PLAYLIST_ACTION_PREFIX}<PLAYLIST NAME> - plays the provided playlist')
-                print(
-                    f' {SEARCH_ACTION_PREFIX}<QUERY> - plays the best match of the given query')
-                print(f' {PLAY}')
-                print(f' {PAUSE}')
-                print(f' {NEXT}')
-                print(f' {PREV}')
-                print(f' {STOP}')
+                resp = controller.help()
+                print(resp.message)
+                for cmd in resp.data:
+                    desc = resp.data[cmd]
+                    print(f' - {cmd} - {desc}')
+
             elif action == LIST_PREDEFINED_PLAYLISTS:
-                predefined_playlists = streamer.fetch_predefinded_playlists()
-                print('Available predefined playlists:')
-                for pl in predefined_playlists:
+                resp = controller.list_playlists()
+                print(resp.message)
+                for pl in resp.data:
                     print(f' - {pl}')
-                print('To play one of them just type pl:<NAME OF THE PLAYLIST>')
+
             elif action == LIST_PROVIDERS:
-                print('Available providers:')
-                for st in streamers.values():
-                    is_selected = "✅" if st.title == streamer.title else ' '
-                    print(f' [{is_selected}] {st.title}')
-                print(
-                    'To change active provider just type provider:<NAME OF THE PROVIDER>')
+                resp = controller.list_streamers()
+                print(resp.message)
+                for pl in resp.data:
+                    print(f' - {pl}')
+
+            elif action.startswith(SELECT_PROVIDER_ACTION_PREFIX):
+                provider_title = action[len(SELECT_PROVIDER_ACTION_PREFIX):]
+                resp = controller.select_provider(provider_title)
+                print(resp.message)
+
             elif action.startswith(PLAYLIST_ACTION_PREFIX):
-                streamer.play_predefined_playlist(
-                    action[len(PLAYLIST_ACTION_PREFIX):])
+                playlist = action[len(PLAYLIST_ACTION_PREFIX):]
+                resp = controller.select_playlist(playlist)
+                print(resp.message)
+                resp = controller.state()
+                print(resp.message)
+
             elif action.startswith(SEARCH_ACTION_PREFIX):
-                streamer.play_from_query(action[len(SEARCH_ACTION_PREFIX):])
+                query = action[len(SEARCH_ACTION_PREFIX):]
+                resp = controller.select_search(query)
+                print(resp.message)
+                resp = controller.state()
+                print(resp.message)
+
             elif action == PLAY:
-                streamer.play()
+                resp = controller.play()
+                resp = controller.state()
+                print(resp.message)
             elif action == PAUSE:
-                streamer.pause()
+                resp = controller.pause()
+                resp = controller.state()
+                print(resp.message)
             elif action == NEXT:
-                streamer.next()
+                resp = controller.next()
+                resp = controller.state()
+                print(resp.message)
             elif action == PREV:
-                streamer.prev()
+                resp = controller.prev()
+                resp = controller.state()
             elif action == STOP:
-                streamer.stop()
+                resp = controller.stop()
+                print(resp.message)
+            elif action == STATE:
+                resp = controller.state()
+                print(resp.message)
             else:
                 raise Exception(f'Unknown action {action}')
 

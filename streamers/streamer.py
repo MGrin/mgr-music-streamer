@@ -1,17 +1,25 @@
+from __future__ import annotations
+
 import threading
 from queue import Queue
+from typing import Any
 from player import Player, PlayerState
 from time import sleep
 
 
 def run_player(callbacks, commands: Queue, returns: Queue):
     player = Player(callbacks)
-    while True:
+    running = True
+    while running:
         sleep(0.2)
         while not commands.empty():
             call_request = commands.get()
             command = call_request[0]
             arg = None if len(call_request) == 1 else call_request[1]
+            if command == 'KILL':
+                running = False
+                continue
+
             method_to_call = getattr(player, command)
             res = None
             if arg is None:
@@ -26,17 +34,9 @@ def run_player(callbacks, commands: Queue, returns: Queue):
 class Streamer:
     def __init__(self, title: str, debug=False):
         self.title = title
+        self.is_running = False
+        self.source: dict[str, str] | None = None
         self.__debug = debug
-        self.player_commands_queue = Queue()
-        self.player_returns_queue = Queue()
-
-        self.player_callbacks = {
-            "on_track_ends_cb": self.on_track_ends_player_event_callback,
-            "on_player_error_cb": self.on_error_player_event_callback,
-        }
-        self.player_thread = threading.Thread(
-            name='player', target=run_player, daemon=True, args=(self.player_callbacks, self.player_commands_queue, self.player_returns_queue))
-        self.player_thread.start()
 
     def send_command_to_player(self, command, arg=None, await_result=False):
         data = [command]
@@ -49,9 +49,17 @@ class Streamer:
             return self.player_returns_queue.get()
 
     def play_predefined_playlist(self, playlist_name: str):
+        self.source = {
+            'type': 'playlist',
+            'name': 'playlist_name',
+        }
         pass
 
     def play_from_query(self, query: str):
+        self.source = {
+            'type': 'query',
+            'query': query,
+        }
         pass
 
     def fetch_predefinded_playlists(self) -> list[str]:
@@ -63,8 +71,9 @@ class Streamer:
     def on_error_player_event_callback(self, event):
         print(event)
 
-    def read_state(self):
-        return self.send_command_to_player('read_state')
+    def get_state(self) -> dict[str, Any]:
+        state = self.send_command_to_player('read_state', await_result=True)
+        return {**(state.serialize()), "source": self.source}  # type: ignore
 
     def play(self):
         if self.__debug:
@@ -100,3 +109,20 @@ class Streamer:
             self.next()
             sleep(5)
         self.stop()
+
+    def run(self):
+        self.player_commands_queue = Queue()
+        self.player_returns_queue = Queue()
+
+        self.player_callbacks = {
+            "on_track_ends_cb": self.on_track_ends_player_event_callback,
+            "on_player_error_cb": self.on_error_player_event_callback,
+        }
+        self.player_thread = threading.Thread(
+            name='player', target=run_player, daemon=True, args=(self.player_callbacks, self.player_commands_queue, self.player_returns_queue))
+        self.player_thread.start()
+        self.is_running = True
+
+    def kill(self):
+        self.send_command_to_player(['KILL'])
+        self.is_running = False

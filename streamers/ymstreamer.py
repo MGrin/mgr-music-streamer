@@ -1,15 +1,11 @@
 from __future__ import annotations
 from streamers.streamer import Streamer
-from player import Player, PlayerState
 from yandex_music import Client
 from yandex_music.album.album import Album
 from yandex_music.artist.artist import Artist
 from yandex_music.playlist.playlist import Playlist
 from yandex_music.track.track import Track
 from yandex_music.track_short import TrackShort
-from time import sleep
-import threading
-from queue import Queue
 
 SEARCH_TYPE_TO_NAME = {
     'track': 'трек',
@@ -46,7 +42,7 @@ class YMStreamer(Streamer):
         for x in PersonalPlaylistBlocks.entities:
             playlists.append(
                 x.data.data.generated_playlist_type)  # type: ignore
-        return playlists
+        return [*playlists, 'liked']
 
     def __get_playlist(self, name: str):
         if name == 'liked':
