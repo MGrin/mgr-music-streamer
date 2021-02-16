@@ -133,7 +133,15 @@ class YMStreamer(Streamer):
         return playlist.tracks  # type: ignore
 
     def __get_playlist_by_id(self, id: str) -> list[yandex_music.Track | yandex_music.TrackShort]:
-        raise Exception('Not implemented')
+        playlist: yandex_music.Playlist = self.client.playlists_list(
+            playlist_ids=[id])[0]
+
+        self.source = {
+            **(self.source or {}),
+            "name": playlist.title,
+        }
+
+        return playlist.fetch_tracks()  # type: ignore
 
     def __generate_playlist_from_query(self, query) -> list[yandex_music.Track | yandex_music.TrackShort]:
         search_result = self.client.search(query)
