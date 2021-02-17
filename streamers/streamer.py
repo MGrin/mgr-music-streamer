@@ -19,18 +19,18 @@ def run_player(callbacks, commands: Queue, returns: Queue):
             command = call_request[0]
             arg = None if len(call_request) == 1 else call_request[1]
             if command == 'KILL':
+                player.stop()
                 running = False
-                continue
-
-            method_to_call = getattr(player, command)
-            res = None
-            if arg is None:
-                res = method_to_call()
             else:
-                res = method_to_call(arg)
+                method_to_call = getattr(player, command)
+                res = None
+                if arg is None:
+                    res = method_to_call()
+                else:
+                    res = method_to_call(arg)
 
-            if res is not None:
-                returns.put(res)
+                if res is not None:
+                    returns.put(res)
 
 
 class Streamer:
@@ -60,6 +60,18 @@ class Streamer:
         self.source = {
             'type': 'playlist',
             'id': playlist_id,
+        }
+
+    def play_artist(self, artist_id: str):
+        self.source = {
+            'type': 'artist',
+            'id': artist_id,
+        }
+
+    def play_album(self, album_id: str):
+        self.source = {
+            'type': 'album',
+            'id': album_id,
         }
 
     def play_from_query(self, query: str):
@@ -131,5 +143,5 @@ class Streamer:
         self.is_running = True
 
     def kill(self):
-        self.send_command_to_player(['KILL'])
+        self.send_command_to_player('KILL')
         self.is_running = False

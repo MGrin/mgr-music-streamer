@@ -8,6 +8,7 @@ SELECT_PROVIDER_ACTION_PREFIX = "provider:"
 LIST_PREDEFINED_PLAYLISTS = "list:pl"
 PLAYLIST_ACTION_PREFIX = "pl:"
 SEARCH_ACTION_PREFIX = "q:"
+ARTIST_ACTION_PREFIX = "ar:"
 PLAY = "play"
 PAUSE = "pause"
 NEXT = "next"
@@ -25,8 +26,9 @@ class CliController(Controller):
             LIST_PROVIDERS: "shows all available music providers'",
             SELECT_PROVIDER_ACTION_PREFIX: "< PROVIDER NAME > switch to PROVIDER NAME provider'",
             LIST_PREDEFINED_PLAYLISTS: "shows list of predefined playlists'",
-            PLAYLIST_ACTION_PREFIX: "< PLAYLIST NAME > plays the provided playlist'",
+            PLAYLIST_ACTION_PREFIX: "< PLAYLIST_NAME | PLAYLIST_ID > plays the provided playlist'",
             SEARCH_ACTION_PREFIX: "< QUERY > plays the best match of the given query'",
+            ARTIST_ACTION_PREFIX: "<ARTIS_ID> plays the provided artis by id",
             STATE: "show what is playing now'",
             PLAY: "",
             PAUSE: "",
@@ -43,8 +45,7 @@ def cli_handler(streamers: dict[str, Streamer]):
     print('Type help to see available commands')
     print()
     while True:
-        action_raw = input(f"{controller.active_streamer.title} > ")
-        action = action_raw.lower()
+        action = input(f"{controller.active_streamer.title} > ")
 
         if action == HELP:
             resp = controller.help()
@@ -84,7 +85,7 @@ def cli_handler(streamers: dict[str, Streamer]):
 
         elif action.startswith(PLAYLIST_ACTION_PREFIX):
             playlist = action[len(PLAYLIST_ACTION_PREFIX):]
-            resp = controller.select_predefined_playlist(playlist)
+            resp = controller.select_playlist(playlist)
             if resp.status != 200:
                 print(f'Error [{resp.status}]: {resp.message}')
             else:
@@ -95,6 +96,16 @@ def cli_handler(streamers: dict[str, Streamer]):
         elif action.startswith(SEARCH_ACTION_PREFIX):
             query = action[len(SEARCH_ACTION_PREFIX):]
             resp = controller.select_search(query)
+            if resp.status != 200:
+                print(f'Error [{resp.status}]: {resp.message}')
+            else:
+                print(resp.message)
+                resp = controller.state()
+                print(resp.message)
+
+        elif action.startswith(ARTIST_ACTION_PREFIX):
+            artist = action[len(ARTIST_ACTION_PREFIX):]
+            resp = controller.select_artist(artist)
             if resp.status != 200:
                 print(f'Error [{resp.status}]: {resp.message}')
             else:

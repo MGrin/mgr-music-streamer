@@ -55,9 +55,13 @@ class PlayerState:
         return message
 
 
+VLC_INSTANCE = vlc.Instance()
+
+
 class Player:
     def __init__(self, callbacks: dict = {}, vlc_media_options: str = None):
-        self._vlc = vlc.Instance()
+        global VLC_INSTANCE
+        self._vlc = VLC_INSTANCE
         self._player = self._vlc.media_player_new()
         self._player_events = self._player.event_manager()
         if "on_track_ends_cb" in callbacks:

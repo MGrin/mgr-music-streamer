@@ -66,7 +66,7 @@ def http_handler(streamers: dict[str, Streamer], args: dict[str, Any]):
     @app.route('/playlists', methods=['POST'])
     def select_playlist():
         playlist = request.get_json()['playlist']
-        return json_response(controller.select_predefined_playlist(playlist))
+        return json_response(controller.select_playlist(playlist))
 
     @app.route('/search', methods=['POST'])
     def select_search():

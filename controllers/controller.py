@@ -72,13 +72,20 @@ class Controller:
         return success_response(playlists, "Available playlists")
 
     @catch
-    def select_predefined_playlist(self, playlist: str):
+    def select_playlist(self, playlist: str):
         playlists = self.active_streamer.fetch_predefinded_playlists()
         if playlist in playlists:
             self.active_streamer.play_predefined_playlist(playlist)
         else:
             self.active_streamer.play_playlist(playlist)
-        return success_response(self.active_streamer.get_state(), f"Playing {playlist} playlist")
+        state = self.active_streamer.get_state()
+        return success_response(self.active_streamer.get_state(), f"Playing {state.source['name']} playlist")
+
+    @catch
+    def select_artist(self, artist: str):
+        self.active_streamer.play_artist(artist)
+        state = self.active_streamer.get_state()
+        return success_response(self.active_streamer.get_state(), f"Playing {state.source['name']} artist")
 
     @catch
     def select_search(self, query):

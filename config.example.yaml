@@ -2,10 +2,14 @@ debug: False
 
 providers:
   yandex_music:
+    default: true
     title: "Яндекс.Музыка"
     username: <YOUR_YANDEX_LOGIN>
     password: <YOUR_YANDEX_PASSWORD>
     cache: ./cache
+  local:
+    title: "Local Music Lib"
+    library: "./cache"
 
 controllers:
   cli: true

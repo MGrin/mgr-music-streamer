@@ -1,4 +1,5 @@
 from __future__ import annotations
+from streamers.local_streamer import LocalStreamer
 from streamers.streamer import Streamer
 from utils import get_configs
 from time import sleep
@@ -25,12 +26,25 @@ def main():
     if len(providers_names) == 0:
         raise Exception('No streamers provided')
 
+    active_streamer: Streamer | None = None
+
     if 'yandex_music' in configs.providers is not None:
         ym_configs = configs.providers['yandex_music']
         streamers['yandex_music'] = YMStreamer(
             ym_configs['username'], ym_configs['password'], ym_configs['title'], debug=configs.debug, cache=ym_configs['cache'])
+        if ym_configs.get('default') and active_streamer is None:
+            active_streamer = streamers['yandex_music']
 
-    streamers[providers_names[0]].run()
+    if 'local' in configs.providers is not None:
+        local_configs = configs.providers['local']
+        streamers['local'] = LocalStreamer(
+            local_configs['title'], debug=configs.debug, library=local_configs['library'])
+        if local_configs.get('default') and active_streamer is None:
+            active_streamer = streamers['local']
+
+    if active_streamer is None:
+        active_streamer = streamers[providers_names[0]]
+    active_streamer.run()
 
     if 'http' in configs.controllers:
         from controllers.http import http_handler
