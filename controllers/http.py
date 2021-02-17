@@ -11,13 +11,74 @@ import logging
 import jsonpickle
 
 
+ENDPOINTS = {
+    '/help': {
+        'method': 'GET',
+        'title': 'Help',
+        'description': 'Show all available endpoints',
+    },
+    '/providers': [{
+        'method': 'GET',
+        'title': 'Providers',
+        'description': 'See a list of available music providers',
+    }, {
+        'method': 'POST',
+        'title': 'Select provider',
+        'description': 'Select/switch a provider',
+        'body': '{ "provider": <PROVIDER_NAME> }'
+    }],
+    '/playlists': [{
+        'method': 'GET',
+        'title': 'Playlists',
+        'description': '',
+    }, {
+        'method': 'POST',
+        'title': 'Play playlist',
+        'description': 'Switches the player to a provided playlist\nNote, if passing the playlist id, it should be in for owner_id:playlist_id',
+        'body': '{ "playlist": <PLAYLIST_NAME | PLAYLIST_ID> }'
+    }],
+    '/search': {
+        'method': 'POST',
+        'title': 'Play from query',
+        'description': 'Plays the best result for a provided query',
+        'body': '{ "query": <QUERY> }'
+    },
+    '/play': {
+        'method': 'PUT',
+        'title': 'Play',
+        'description': 'Play',
+    },
+    '/pause': {
+        'method': 'PUT',
+        'title': 'Pause',
+        'description': 'Toggle the pause on/off',
+    },
+    '/next': {
+        'method': 'PUT',
+        'title': 'Next track',
+        'description': 'Next track',
+    },
+    '/prev': {
+        'method': 'PUT',
+        'title': 'Previous track',
+        'description': 'Previous track',
+    },
+    '/stop': {
+        'method': 'PUT',
+        'title': 'Stop',
+        'description': 'Stop the music',
+    },
+    '/state': {
+        'method': 'GET',
+        'title': 'Get state',
+        'description': 'Returns a current player state',
+    },
+}
+
+
 class HTTPController(Controller):
     def help(self):
-        return Response(
-            {"status": int, "message": "Method not allowed"},
-            status=405,
-            mimetype='application/json'
-        )
+        return ControllerResponse(status=200, message='Help', data=ENDPOINTS)
 
 
 def json_response(response: ControllerResponse):
@@ -48,7 +109,7 @@ def http_handler(streamers: dict[str, Streamer], args: dict[str, Any]):
 
     @app.route('/help')
     def help(self):
-        return controller.help()
+        return json_response(controller.help())
 
     @app.route('/providers', methods=['GET'])
     def list_providers():
@@ -66,7 +127,17 @@ def http_handler(streamers: dict[str, Streamer], args: dict[str, Any]):
     @app.route('/playlists', methods=['POST'])
     def select_playlist():
         playlist = request.get_json()['playlist']
-        return json_response(controller.select_predefined_playlist(playlist))
+        return json_response(controller.select_playlist(playlist))
+
+    @app.route('/artist', methods=['POST'])
+    def select_artist():
+        artist = request.get_json()['artist']
+        return json_response(controller.select_artist(artist))
+
+    @app.route('/album', methods=['POST'])
+    def select_album():
+        album = request.get_json()['album']
+        return json_response(controller.select_album(album))
 
     @app.route('/search', methods=['POST'])
     def select_search():

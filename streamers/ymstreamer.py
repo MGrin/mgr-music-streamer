@@ -20,7 +20,7 @@ SEARCH_TYPE_TO_NAME = {
     'podcast_episode': 'эпизод подкаста',
 }
 
-CACHE_FOLDER = '/tmp'
+CACHE_FOLDER = '/tmp/YMStreamer'
 
 
 class YMTrack(Track):
@@ -74,9 +74,10 @@ class YMTrack(Track):
 
 class YMStreamer(Streamer):
     def __init__(self, username: str, password: str, title: str, debug=False, cache="/tmp/YMStreamer"):
-        super(YMStreamer, self).__init__(title, debug)
+        super().__init__(title, debug)
         self.client = Client.from_credentials(username, password)
-        CACHE_PATH = cache
+        global CACHE_FOLDER
+        CACHE_FOLDER = cache
 
     def play_predefined_playlist(self, playlist_name: str):
         super().play_predefined_playlist(playlist_name)
@@ -89,6 +90,40 @@ class YMStreamer(Streamer):
         super().play_playlist(playlist_id)
         ym_playlist = self.__get_playlist_by_id(playlist_id)
         playlist: list[Track] = [YMTrack(track) for track in ym_playlist]
+        self.set_playlist(playlist)
+        self.play()
+
+    def play_artist(self, artist_id: str):
+        super().play_artist(artist_id)
+        artist: yandex_music.Artist = self.client.artists(
+            artist_ids=[artist_id])[0]
+        self.source = {
+            **(self.source or {}),
+            "name": artist.name,
+        }
+        tracks: yandex_music.ArtistTracks | None = artist.get_tracks(
+            page_size=50)
+        if tracks is None:
+            raise Exception('Failed to get the artis')
+        playlist: list[Track] = [YMTrack(track) for track in tracks.tracks]
+        self.set_playlist(playlist)
+        self.play()
+
+    def play_album(self, album_id: str):
+        super().play_album(album_id)
+        album: yandex_music.Album | None = self.client.albums_with_tracks(
+            album_id=album_id)
+        if album is None:
+            raise Exception('Failed to get the album')
+        self.source = {
+            **(self.source or {}),
+            "name": album.title,
+        }
+
+        tracks = None
+        if tracks is None:
+            raise Exception('Failed to get the artis')
+        playlist: list[Track] = [YMTrack(track) for track in tracks.tracks]
         self.set_playlist(playlist)
         self.play()
 
@@ -134,7 +169,7 @@ class YMStreamer(Streamer):
 
     def __get_playlist_by_id(self, id: str) -> list[yandex_music.Track | yandex_music.TrackShort]:
         playlist: yandex_music.Playlist = self.client.playlists_list(
-            playlist_ids=[id])[0]
+            playlist_ids=[int(id)])[0]
 
         self.source = {
             **(self.source or {}),

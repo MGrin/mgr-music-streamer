@@ -50,6 +50,18 @@ class Streamer:
                 pass
             return self.player_returns_queue.get()
 
+    def play_artist(self, artist_id: str):
+        self.source = {
+            'type': 'artist',
+            'id': artist_id
+        }
+
+    def play_album(self, album_id: str):
+        self.source = {
+            'type': 'album',
+            'id': album_id
+        }
+
     def play_predefined_playlist(self, playlist_name: str):
         self.source = {
             'type': 'playlist',
