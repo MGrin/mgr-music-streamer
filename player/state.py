@@ -19,6 +19,7 @@ class PlayerState:
         self.prev_track: Track | None = None
         self.ellapsed_ms: int = 0
         self.remaining_ms: int = 0
+        self.volume: int = 0
         self.source: Source | None = None
 
     def set_is_playing(self, val: bool):
@@ -44,6 +45,9 @@ class PlayerState:
 
     def set_remaining_ms(self, val: int):
         self.remaining_ms = val
+
+    def set_volume(self, val: int):
+        self.volume = val
 
     def set_source(self, val: Source):
         self.source = val

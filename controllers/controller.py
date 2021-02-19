@@ -99,6 +99,11 @@ class Controller:
         return success_response(self.active_streamer.get_state(), f"Playing best result for {query} search")
 
     @catch
+    def shuffle(self):
+        self.active_streamer.shuffle()
+        return success_response(self.active_streamer.get_state())
+
+    @catch
     def play(self):
         self.active_streamer.play()
         return success_response(self.active_streamer.get_state())
@@ -121,4 +126,9 @@ class Controller:
     @catch
     def stop(self):
         self.active_streamer.stop()
+        return success_response(self.active_streamer.get_state())
+
+    @catch
+    def set_volume(self, volume: int):
+        self.active_streamer.set_volume(volume)
         return success_response(self.active_streamer.get_state())

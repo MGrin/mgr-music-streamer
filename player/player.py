@@ -1,6 +1,7 @@
 from __future__ import annotations
 from player.state import PlayerState, Source
 from models.Track import Track
+from random import shuffle
 import vlc
 
 
@@ -54,6 +55,11 @@ class Player:
         self.playlist = playlist
         self.now_playing_idx = -1
 
+    def shuffle(self):
+        shuffle(self.playlist)
+        self.now_playing_idx = -1
+        self.play()
+
     def play(self):
         if len(self.playlist) == 0:
             return
@@ -90,3 +96,6 @@ class Player:
         self._player.stop()
         self._state.set_is_playing(False)
         self._state.set_ellapsed_ms(0)
+
+    def set_volume(self, volume: int):
+        self._state.set_volume(self._player.audio_set_volume(volume))

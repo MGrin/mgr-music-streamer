@@ -10,6 +10,8 @@ PLAYLIST_ACTION_PREFIX = "pl:"
 SEARCH_ACTION_PREFIX = "q:"
 ARTIST_ACTION_PREFIX = "ar:"
 ALBUM_ACTION_PREFIX = "al:"
+VOLUME_PREFIX = "vol:"
+SHUFFLE = "sh"
 PLAY = "play"
 PAUSE = "pause"
 NEXT = "next"
@@ -30,7 +32,9 @@ class CliController(Controller):
             PLAYLIST_ACTION_PREFIX: "< PLAYLIST_NAME | PLAYLIST_ID > plays the provided playlist'",
             SEARCH_ACTION_PREFIX: "< QUERY > plays the best match of the given query'",
             ARTIST_ACTION_PREFIX: "<ARTIS_ID> plays the provided artis by id",
+            VOLUME_PREFIX: "<VOLUME_LEVEL> sets the volume to VOLUME_LEVEL",
             STATE: "show what is playing now'",
+            SHUFFLE: "shuffle the playlist",
             PLAY: "",
             PAUSE: "",
             NEXT: "",
@@ -124,6 +128,23 @@ def cli_handler(streamers: dict[str, Streamer]):
                 resp = controller.state()
                 print(resp.message)
 
+        elif action.startswith(VOLUME_PREFIX):
+            level = int(action[len(VOLUME_PREFIX):])
+            resp = controller.set_volume(level)
+            if resp.status != 200:
+                print(f'Error [{resp.status}]: {resp.message}')
+            else:
+                print(resp.message)
+                resp = controller.state()
+                print(resp.message)
+
+        elif action == SHUFFLE:
+            resp = controller.shuffle()
+            if resp.status != 200:
+                print(f'Error [{resp.status}]: {resp.message}')
+            else:
+                resp = controller.state()
+                print(resp.message)
         elif action == PLAY:
             resp = controller.play()
             if resp.status != 200:

@@ -14,7 +14,7 @@ def run_player(callbacks, commands: Queue, returns: Queue):
     player = Player(callbacks)
     running = True
     while running:
-        sleep(0.2)
+        sleep(0.05)
         while not commands.empty():
             call_request = commands.get()
             command = call_request[0]
@@ -99,6 +99,12 @@ class Streamer:
 
     def set_playlist(self, playlist: list[Track], source: Source):
         self.send_command_to_player('set_playlist', [playlist, source])
+
+    def shuffle(self):
+        self.send_command_to_player('shuffle')
+
+    def set_volume(self, volume: int):
+        self.send_command_to_player('set_volume', [volume])
 
     def __testable_play(self, number_of_tracks=5):
         self.play()
