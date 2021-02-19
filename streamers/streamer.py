@@ -5,7 +5,8 @@ import threading
 from queue import Queue
 from typing import Any
 
-from player import Player, PlayerState
+from player.state import PlayerState, Source
+from player.player import Player
 from time import sleep
 
 
@@ -17,17 +18,17 @@ def run_player(callbacks, commands: Queue, returns: Queue):
         while not commands.empty():
             call_request = commands.get()
             command = call_request[0]
-            arg = None if len(call_request) == 1 else call_request[1]
+            args = None if len(call_request) == 1 else call_request[1:]
             if command == 'KILL':
                 running = False
                 continue
 
             method_to_call = getattr(player, command)
             res = None
-            if arg is None:
+            if args is None:
                 res = method_to_call()
             else:
-                res = method_to_call(arg)
+                res = method_to_call(*args)
 
             if res is not None:
                 returns.put(res)
@@ -37,13 +38,13 @@ class Streamer:
     def __init__(self, title: str, debug=False):
         self.title = title
         self.is_running = False
-        self.source: dict[str, str] | None = None
         self.__debug = debug
 
-    def send_command_to_player(self, command, arg=None, await_result=False):
+    def send_command_to_player(self, command, args=None, await_result=False):
         data = [command]
-        if arg is not None:
-            data.append(arg)
+        if args is not None:
+            for arg in args:
+                data.append(arg)
         self.player_commands_queue.put(data)
         if await_result:
             while self.player_returns_queue.empty():
@@ -51,34 +52,19 @@ class Streamer:
             return self.player_returns_queue.get()
 
     def play_artist(self, artist_id: str):
-        self.source = {
-            'type': 'artist',
-            'id': artist_id
-        }
+        pass
 
     def play_album(self, album_id: str):
-        self.source = {
-            'type': 'album',
-            'id': album_id
-        }
+        pass
 
     def play_predefined_playlist(self, playlist_name: str):
-        self.source = {
-            'type': 'playlist',
-            'name': playlist_name,
-        }
+        pass
 
     def play_playlist(self, playlist_id: str):
-        self.source = {
-            'type': 'playlist',
-            'id': playlist_id,
-        }
+        pass
 
     def play_from_query(self, query: str):
-        self.source = {
-            'type': 'query',
-            'query': query,
-        }
+        pass
 
     def fetch_predefinded_playlists(self) -> list[str]:
         return []
@@ -91,7 +77,6 @@ class Streamer:
 
     def get_state(self) -> PlayerState | None:
         state = self.send_command_to_player('read_state', await_result=True)
-        state.source = self.source
         return state
 
     def play(self):
@@ -112,14 +97,8 @@ class Streamer:
     def stop(self):
         self.send_command_to_player('stop')
 
-    def set_vlc_media_options(self, vlc_media_options: str):
-        self.send_command_to_player('set_vlc_media_options', vlc_media_options)
-
-    def append_playlist(self, playlist: list[Track]):
-        self.send_command_to_player('append_playlist', playlist)
-
-    def set_playlist(self, playlist: list[Track]):
-        self.send_command_to_player('set_playlist', playlist)
+    def set_playlist(self, playlist: list[Track], source: Source):
+        self.send_command_to_player('set_playlist', [playlist, source])
 
     def __testable_play(self, number_of_tracks=5):
         self.play()
@@ -143,5 +122,5 @@ class Streamer:
         self.is_running = True
 
     def kill(self):
-        self.send_command_to_player(['KILL'])
+        self.send_command_to_player('KILL')
         self.is_running = False

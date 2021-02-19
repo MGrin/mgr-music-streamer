@@ -1,0 +1,282 @@
+{
+	"info": {
+		"_postman_id": "f1c0f9eb-5161-4375-a8f6-97774e89daa7",
+		"name": "mgr-music-streamer",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Help",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/help",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"help"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "State",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/state",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"state"
+					]
+				},
+				"description": "Returns a current player state"
+			},
+			"response": []
+		},
+		{
+			"name": "List providers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/providers",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"providers"
+					]
+				},
+				"description": "Lists all available providers"
+			},
+			"response": []
+		},
+		{
+			"name": "Select provider",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"provider\": \"DUMMY\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HOST}}/providers",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"providers"
+					]
+				},
+				"description": "Select/switch a provider"
+			},
+			"response": []
+		},
+		{
+			"name": "List playlists",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/playlists",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"playlists"
+					]
+				},
+				"description": "List available predefined playlists"
+			},
+			"response": []
+		},
+		{
+			"name": "Play playlist",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"playlist\": \"playlistOfTheDay\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HOST}}/playlists",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"playlists"
+					]
+				},
+				"description": "Switches the player to a provided playlist\nNote, if passing the playlist id, it should be in for owner_id:playlist_id"
+			},
+			"response": []
+		},
+		{
+			"name": "Play from query",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query\": \"Ez3kiel\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HOST}}/search",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"search"
+					]
+				},
+				"description": "Plays the best result for a provided query"
+			},
+			"response": []
+		},
+		{
+			"name": "Play",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/play",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"play"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Previous",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/prev",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"prev"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Pause",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/pause",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"pause"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Next",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/next",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"next"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Stop",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/stop",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"stop"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "SECRET",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "HOST",
+			"value": "localhost:5000"
+		}
+	]
+}

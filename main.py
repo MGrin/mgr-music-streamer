@@ -28,13 +28,19 @@ def main():
     if 'yandex_music' in configs.providers is not None:
         ym_configs = configs.providers['yandex_music']
         streamers['yandex_music'] = YMStreamer(
-            ym_configs['username'], ym_configs['password'], ym_configs['title'], debug=configs.debug, cache=ym_configs['cache'])
+            ym_configs['title'],
+            ym_configs['username'],
+            ym_configs['password'],
+            cache=ym_configs['cache'],
+            debug=configs.debug,
+        )
 
     streamers[providers_names[0]].run()
 
     if 'http' in configs.controllers:
         from controllers.http import http_handler
-        runController(http_handler, streamers, configs.controllers['http'])
+        runController(http_handler, streamers, {
+                      **configs.controllers['http'], "debug": configs})
 
     if 'cli' in configs.controllers:
         from controllers.cli import cli_handler

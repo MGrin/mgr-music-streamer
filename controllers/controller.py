@@ -79,19 +79,19 @@ class Controller:
         else:
             self.active_streamer.play_playlist(playlist)
         state = self.active_streamer.get_state()
-        return success_response(self.active_streamer.get_state(), f"Playing {state.source['name']} playlist")
+        return success_response(self.active_streamer.get_state(), f"Playing {state.source.name} playlist")
 
     @catch
     def select_artist(self, artist: str):
         self.active_streamer.play_artist(artist)
         state = self.active_streamer.get_state()
-        return success_response(self.active_streamer.get_state(), f"Playing {state.source['name']} artist")
+        return success_response(self.active_streamer.get_state(), f"Playing {state.source.name} artist")
 
     @catch
     def select_album(self, album: str):
         self.active_streamer.play_album(album)
         state = self.active_streamer.get_state()
-        return success_response(self.active_streamer.get_state(), f"Playing {state.source['name']} album")
+        return success_response(self.active_streamer.get_state(), f"Playing {state.source.name} album")
 
     @catch
     def select_search(self, query):

@@ -116,7 +116,7 @@ def cli_handler(streamers: dict[str, Streamer]):
 
         elif action.startswith(ALBUM_ACTION_PREFIX):
             album = action[len(ALBUM_ACTION_PREFIX):]
-            resp = controller.select_artist(album)
+            resp = controller.select_album(album)
             if resp.status != 200:
                 print(f'Error [{resp.status}]: {resp.message}')
             else:

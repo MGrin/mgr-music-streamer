@@ -2,6 +2,7 @@ debug: False
 
 providers:
   yandex_music:
+    default: true
     title: "Яндекс.Музыка"
     username: <YOUR_YANDEX_LOGIN>
     password: <YOUR_YANDEX_PASSWORD>
@@ -10,4 +11,5 @@ providers:
 controllers:
   cli: true
   http:
-    port: 500
+    port: 5000
+    token: SECRET

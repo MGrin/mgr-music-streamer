@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+from yandex_music.artist.artist import Artist
+from yandex_music.playlist.playlist import Playlist
+from player.state import Source
 from cachetools.func import ttl_cache
 from models.SubList import SubList
 from pathlib import Path
@@ -73,68 +77,72 @@ class YMTrack(Track):
 
 
 class YMStreamer(Streamer):
-    def __init__(self, username: str, password: str, title: str, debug=False, cache="/tmp/YMStreamer"):
+    def __init__(self, title: str, username: str, password: str, cache="/tmp/YMStreamer", debug=False):
         super().__init__(title, debug)
         self.client = Client.from_credentials(username, password)
         global CACHE_FOLDER
         CACHE_FOLDER = cache
 
     def play_predefined_playlist(self, playlist_name: str):
-        super().play_predefined_playlist(playlist_name)
-        ym_playlist = self.__get_playlist_by_name(playlist_name)
+        (ym_playlist, original) = self.__get_playlist_by_name(playlist_name)
         playlist: list[Track] = [YMTrack(track) for track in ym_playlist]
-        self.set_playlist(playlist)
+        source = Source(type='playlist', name=playlist_name,
+                        id=str(original.uid))
+        self.set_playlist(playlist, source=source)
         self.play()
 
     def play_playlist(self, playlist_id: str):
-        super().play_playlist(playlist_id)
-        ym_playlist = self.__get_playlist_by_id(playlist_id)
+        (ym_playlist, original) = self.__get_playlist_by_id(playlist_id)
         playlist: list[Track] = [YMTrack(track) for track in ym_playlist]
-        self.set_playlist(playlist)
+        source = Source(type='playlist', id=playlist_id, name=original.title)
+        self.set_playlist(playlist, source)
         self.play()
 
     def play_artist(self, artist_id: str):
-        super().play_artist(artist_id)
         artist: yandex_music.Artist = self.client.artists(
             artist_ids=[artist_id])[0]
-        self.source = {
-            **(self.source or {}),
-            "name": artist.name,
-        }
         tracks: yandex_music.ArtistTracks | None = artist.get_tracks(
             page_size=50)
         if tracks is None:
             raise Exception('Failed to get the artis')
         playlist: list[Track] = [YMTrack(track) for track in tracks.tracks]
-        self.set_playlist(playlist)
+        source = Source(type='artist', id=artist_id, name=artist.name)
+        self.set_playlist(playlist, source)
         self.play()
 
     def play_album(self, album_id: str):
-        super().play_album(album_id)
         album: yandex_music.Album | None = self.client.albums_with_tracks(
             album_id=album_id)
         if album is None:
             raise Exception('Failed to get the album')
-        self.source = {
-            **(self.source or {}),
-            "name": album.title,
-        }
 
         tracks = None
         if tracks is None:
             raise Exception('Failed to get the artis')
         playlist: list[Track] = [YMTrack(track) for track in tracks.tracks]
-        self.set_playlist(playlist)
+        source = Source(type='album', id=album_id, name=album.title)
+        self.set_playlist(playlist, source)
         self.play()
 
     def play_from_query(self, query: str):
-        super().play_predefined_playlist(query)
-        ym_playlist = self.__generate_playlist_from_query(query)
+        (ym_playlist, original) = self.__generate_playlist_from_query(query)
+        if original is None:
+            raise Exception('Fucked up')
+
+        t = str(type(original)).split('.')[-1][:-2].lower()
         playlist: list[Track] = [YMTrack(track) for track in ym_playlist]
-        self.set_playlist(playlist)
+        source = Source(
+            type=t,
+            id=str(original.uid if isinstance(
+                original, yandex_music.Playlist) else original.id),
+            name=original.name if isinstance(
+                original, yandex_music.Artist) else original.title,
+            query=query
+        )
+        self.set_playlist(playlist, source)
         self.play()
 
-    @ttl_cache(maxsize=1, ttl=60 * 60)  # type: ignore
+    @ ttl_cache(maxsize=1, ttl=60 * 60)  # type: ignore
     def fetch_predefinded_playlists(self):
         PersonalPlaylistBlocks = self.client.landing(
             blocks=['personalplaylists']).blocks[0]
@@ -145,12 +153,12 @@ class YMStreamer(Streamer):
                 x.data.data.generated_playlist_type)  # type: ignore
         return [*playlists, 'liked']
 
-    def __get_playlist_by_name(self, name: str) -> list[yandex_music.Track | yandex_music.TrackShort]:
+    def __get_playlist_by_name(self, name: str):
         if name == 'liked':
             tracks = self.client.users_likes_tracks()
             if tracks is None:
                 raise Exception('No tracks found')
-            return tracks.tracks  # type: ignore
+            return (tracks.tracks, tracks)
 
         PersonalPlaylistBlocks = self.client.landing(
             blocks=['personalplaylists']).blocks[0]
@@ -165,27 +173,22 @@ class YMStreamer(Streamer):
         playlist: yandex_music.Playlist = self.client.users_playlists(
             user_id=DailyPlaylist.uid, kind=DailyPlaylist.kind)  # type: ignore
 
-        return playlist.tracks  # type: ignore
+        return (playlist.tracks, playlist)
 
-    def __get_playlist_by_id(self, id: str) -> list[yandex_music.Track | yandex_music.TrackShort]:
+    def __get_playlist_by_id(self, id: str) -> tuple[list[yandex_music.Track | yandex_music.TrackShort], yandex_music.Playlist]:
         playlist: yandex_music.Playlist = self.client.playlists_list(
             playlist_ids=[int(id)])[0]
 
-        self.source = {
-            **(self.source or {}),
-            "name": playlist.title,
-        }
+        return (playlist.fetch_tracks(), playlist)  # type: ignore
 
-        return playlist.fetch_tracks()  # type: ignore
-
-    def __generate_playlist_from_query(self, query) -> list[yandex_music.Track | yandex_music.TrackShort]:
+    def __generate_playlist_from_query(self, query):
         search_result = self.client.search(query)
         resulting_playlist: list[yandex_music.Track |
                                  yandex_music.TrackShort] = []
-
+        best: yandex_music.Playlist | yandex_music.Track | yandex_music.Artist | yandex_music.Album | None = None
         if search_result.best:
             type_ = search_result.best.type
-            best = search_result.best.result
+            best = search_result.best.result  # type: ignore
 
             if type_ in ['track', 'podcast_episode']:
                 if isinstance(best, yandex_music.Track):
@@ -202,4 +205,4 @@ class YMStreamer(Streamer):
             elif type_ == 'playlist':
                 if isinstance(best, yandex_music.Playlist):
                     resulting_playlist = best.tracks  # type: ignore
-        return resulting_playlist
+        return (resulting_playlist, best)
