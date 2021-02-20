@@ -44,6 +44,17 @@ ENDPOINTS = {
         'description': 'Plays the best result for a provided query',
         'body': '{ "query": <QUERY> }'
     },
+    '/volume': {
+        'method': 'POST',
+        'title': 'Set volume',
+        'description': 'Set volume',
+        'body': '{ "volume": <VOLUME_LEVEL> }',
+    },
+    '/shuffle': {
+        'method': 'PUT',
+        'title': 'Shuffle',
+        'description': 'Shuffle current playlist',
+    },
     '/play': {
         'method': 'PUT',
         'title': 'Play',
@@ -174,6 +185,17 @@ def http_handler(streamers: dict[str, Streamer], args: dict[str, Any]):
     def select_search():
         query = request.get_json()['query']
         return json_response(controller.select_search(query))
+
+    @app.route('/shuffle', methods=['PUT'])
+    @authorized
+    def shuffle():
+        return json_response(controller.shuffle())
+
+    @app.route('/volume', methods=['PUT'])
+    @authorized
+    def volume():
+        volume = request.get_json()['volume']
+        return json_response(controller.set_volume(int(volume)))
 
     @app.route('/play', methods=['PUT'])
     @authorized
