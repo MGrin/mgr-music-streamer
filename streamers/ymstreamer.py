@@ -77,9 +77,13 @@ class YMTrack(Track):
 
 
 class YMStreamer(Streamer):
-    def __init__(self, title: str, username: str, password: str, cache="/tmp/YMStreamer", debug=False):
+    def __init__(self, title: str, username: str | None = None, password: str | None = None, token: str | None = None, cache="/tmp/YMStreamer", debug=False):
         super().__init__(title, debug)
-        self.client = Client.from_credentials(username, password)
+        if token is not None:
+            self.client = Client.from_token(token)
+        else:
+            self.client = Client.from_credentials(username, password)
+
         global CACHE_FOLDER
         CACHE_FOLDER = cache
 

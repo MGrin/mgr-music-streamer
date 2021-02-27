@@ -1,3 +1,4 @@
+from typing import Dict
 from controllers.controller import Response, catch, success_response
 from controllers.controller import Controller
 from streamers.streamer import Streamer
@@ -44,7 +45,7 @@ class CliController(Controller):
         return success_response(data=data, message=message)
 
 
-def cli_handler(streamers: dict[str, Streamer]):
+def cli_handler(streamers: Dict[str, Streamer]):
     controller = CliController(streamers)
 
     print('Type help to see available commands')

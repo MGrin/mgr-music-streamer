@@ -38,7 +38,7 @@ class Player:
         self._state.set_is_playing(True)
 
         track_path = track.cache()
-        media = self._vlc.media_new(track_path)
+        media = self._vlc.media_new(track_path, "-A alsa,none --alsa-audio-device default")
         self._player.set_media(media)
         self._player.play()
 

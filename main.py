@@ -29,8 +29,9 @@ def main():
         ym_configs = configs.providers['yandex_music']
         streamers['yandex_music'] = YMStreamer(
             ym_configs['title'],
-            ym_configs['username'],
-            ym_configs['password'],
+            username=ym_configs.get('username'),
+            password=ym_configs.get('password'),
+            token=ym_configs.get('token'),
             cache=ym_configs['cache'],
             debug=configs.debug,
         )
