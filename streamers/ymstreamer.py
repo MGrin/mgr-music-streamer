@@ -82,7 +82,8 @@ class YMStreamer(Streamer):
         if token is not None:
             self.client = Client.from_token(token)
         else:
-            self.client = Client.from_credentials(username, password)
+            self.client = Client.from_credentials(
+                username or '', password or '')
 
         global CACHE_FOLDER
         CACHE_FOLDER = cache
