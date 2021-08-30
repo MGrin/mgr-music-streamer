@@ -1,7 +1,6 @@
 from __future__ import annotations
 from functools import wraps
 from player.state import PlayerState
-from gevent.pywsgi import WSGIServer
 
 from controllers.controller import Controller, Response as ControllerResponse
 from copy import deepcopy
@@ -227,5 +226,4 @@ def http_handler(streamers: dict[str, Streamer], args: dict[str, Any]):
     def state():
         return json_response(controller.state())
 
-    http_server = WSGIServer(('', args['port']), app, log=log, error_log=log)
-    http_server.serve_forever()
+    app.run(port=args['port'])

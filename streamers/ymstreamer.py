@@ -85,6 +85,7 @@ class YMStreamer(Streamer):
             self.client = Client.from_credentials(
                 username or '', password or '')
 
+        print(self.client.token)
         global CACHE_FOLDER
         CACHE_FOLDER = cache
 
